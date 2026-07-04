@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>StudyBloom 🌸 — Trợ lý học tập của Thơ</title>
+  <meta name="description" content="Hệ thống học tập cá nhân dành riêng cho Nguyễn Hoàng Thơ — Flashcard, Quiz, Ghi chú, AI, và nhiều hơn nữa." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- KaTeX (Math rendering) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <!-- App CSS -->
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Particle Background -->
+    <canvas id="particle-canvas"></canvas>
+
+    <!-- Sidebar -->
+    <aside id="sidebar">
+      <div class="sidebar-logo">
+        <div class="logo-icon">🌸</div>
+        <div class="logo-text">
+          <span class="logo-name">StudyBloom</span>
+          <span class="logo-sub" id="sidebar-greeting">Chào Thơ!</span>
+        </div>
+        <button class="sidebar-toggle" id="sidebar-toggle" title="Toggle sidebar">
+          <i data-lucide="panel-left-close"></i>
+        </button>
+      </div>
+
+      <nav class="sidebar-nav">
+        <div class="nav-section-label" data-i18n="nav_main">Chính</div>
+        <a class="nav-item active" data-page="dashboard" href="#dashboard">
+          <i data-lucide="layout-dashboard"></i>
+          <span data-i18n="nav_dashboard">Tổng quan</span>
+        </a>
+        <a class="nav-item" data-page="subjects" href="#subjects">
+          <i data-lucide="book-open"></i>
+          <span data-i18n="nav_subjects">Môn học</span>
+        </a>
+        <a class="nav-item" data-page="exams" href="#exams">
+          <i data-lucide="graduation-cap"></i>
+          <span data-i18n="nav_exams">Kỳ thi</span>
+          <span class="nav-badge" id="exam-badge"></span>
+        </a>
+
+        <div class="nav-section-label" data-i18n="nav_study">Học tập</div>
+        <a class="nav-item" data-page="flashcards" href="#flashcards">
+          <i data-lucide="layers"></i>
+          <span data-i18n="nav_flashcards">Flashcard</span>
+          <span class="nav-badge due" id="fc-badge"></span>
+        </a>
+        <a class="nav-item" data-page="quiz" href="#quiz">
+          <i data-lucide="file-check-2"></i>
+          <span data-i18n="nav_quiz">Bài kiểm tra</span>
+        </a>
+        <a class="nav-item" data-page="notes" href="#notes">
+          <i data-lucide="notebook-pen"></i>
+          <span data-i18n="nav_notes">Ghi chú</span>
+        </a>
+
+        <div class="nav-section-label" data-i18n="nav_tools">Công cụ</div>
+        <a class="nav-item" data-page="planner" href="#planner">
+          <i data-lucide="calendar-days"></i>
+          <span data-i18n="nav_planner">Lịch học</span>
+        </a>
+        <a class="nav-item" data-page="timer" href="#timer">
+          <i data-lucide="timer"></i>
+          <span data-i18n="nav_timer">Đồng hồ học</span>
+        </a>
+        <a class="nav-item" data-page="ai" href="#ai">
+          <i data-lucide="bot"></i>
+          <span data-i18n="nav_ai">Trợ lý AI</span>
+          <span class="nav-badge new">AI</span>
+        </a>
+        <a class="nav-item" data-page="prompt" href="#prompt">
+          <i data-lucide="sparkles"></i>
+          <span data-i18n="nav_prompt">Tối ưu Prompt</span>
+        </a>
+        <a class="nav-item" data-page="diagrams" href="#diagrams">
+          <i data-lucide="git-branch"></i>
+          <span data-i18n="nav_diagrams">Biểu đồ</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="lang-toggle" id="lang-toggle">
+          <i data-lucide="languages"></i>
+          <span id="lang-label">VI</span>
+        </button>
+        <div class="streak-display" id="streak-display">
+          <span class="streak-icon">🔥</span>
+          <span class="streak-count" id="streak-count">0</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main id="main-content">
+      <div id="page-container">
+        <!-- Pages render here -->
+        <div class="loading-screen">
+          <div class="loading-logo">🌸</div>
+          <p>Đang tải StudyBloom...</p>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Modal Overlay -->
+  <div id="modal-overlay" class="hidden">
+    <div id="modal-box">
+      <button id="modal-close" class="modal-close-btn"><i data-lucide="x"></i></button>
+      <div id="modal-content"></div>
+    </div>
+  </div>
+
+  <!-- Toast Container -->
+  <div id="toast-container"></div>
+
+  <!-- Scripts — order matters -->
+  <script src="utils/idb.js"></script>
+  <script src="utils/storage.js"></script>
+  <script src="utils/sm2.js"></script>
+  <script src="utils/i18n.js"></script>
+  <script src="pages/dashboard.js"></script>
+  <script src="pages/subjects.js"></script>
+  <script src="pages/exams.js"></script>
+  <script src="pages/flashcards.js"></script>
+  <script src="pages/quiz.js"></script>
+  <script src="pages/notes.js"></script>
+  <script src="pages/planner.js"></script>
+  <script src="pages/timer.js"></script>
+  <script src="pages/ai_assistant.js"></script>
+  <script src="pages/prompt_optimizer.js"></script>
+  <script src="pages/diagrams.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

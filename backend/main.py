@@ -1,0 +1,76 @@
+# ============================================================
+# StudyBloom 🌸 — FastAPI Backend
+# ============================================================
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+import uvicorn
+import sys
+
+# Force UTF-8 encoding on Windows console to prevent Unicode crashes from emojis
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
+from routers import ocr, rag, quiz
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Initialize services on startup."""
+    print("🌸 StudyBloom backend starting...")
+    # Pre-load OCR models in background
+    try:
+        from services.ocr_service import ocr_service
+        print("✅ OCR service ready")
+    except Exception as e:
+        print(f"⚠️  OCR service init warning: {e}")
+
+    try:
+        from services.rag_service import rag_service
+        print("✅ RAG service ready")
+    except Exception as e:
+        print(f"⚠️  RAG service init warning: {e}")
+
+    print("🌸 Backend ready at http://localhost:8000")
+    yield
+    print("👋 StudyBloom backend shutting down...")
+
+
+app = FastAPI(
+    title="StudyBloom API 🌸",
+    description="Backend for StudyBloom — OCR + RAG Study Assistant",
+    version="1.0.0",
+    lifespan=lifespan,
+)
+
+# Allow frontend to call the API (CORS)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],      # Allow all origins for local use
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include routers
+app.include_router(ocr.router,  prefix="/api/ocr",  tags=["OCR"])
+app.include_router(rag.router,  prefix="/api/rag",  tags=["RAG"])
+app.include_router(quiz.router, prefix="/api/quiz", tags=["Quiz"])
+
+
+@app.get("/api/health")
+async def health():
+    """Health check — also returns info about the loaded Ollama model."""
+    from services.rag_service import rag_service
+    return {
+        "status": "ok",
+        "model":  rag_service.model_name if hasattr(rag_service, "model_name") else "ollama",
+        "app":    "StudyBloom 🌸",
+    }
+
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
