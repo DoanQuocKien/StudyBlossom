@@ -1,0 +1,46 @@
+# ── Python ──────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.pyc
+*.egg-info/
+dist/
+build/
+*.egg
+pip-wheel-metadata/
+.env
+.venv
+venv/
+env/
+
+# ── PyInstaller build artifacts (very large, not needed in repo) ──
+backend/build/
+# NOTE: backend/dist/StudyBloomBackend.exe IS tracked via Git LFS — keep it
+
+# ── Portable Python (auto-downloaded, not for repo) ─────────
+.python/
+
+# ── Data & secrets ──────────────────────────────────────────
+backend/data/*.json
+*.sqlite
+*.db
+*.log
+
+# ── OS junk ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editor / IDE ────────────────────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.user
+
+# ── Node (if ever used) ─────────────────────────────────────
+node_modules/
+
+# ── Temp / test artifacts ───────────────────────────────────
+*.tmp
+*.bak
