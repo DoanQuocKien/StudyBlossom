@@ -10,6 +10,14 @@ const FlashcardsPage = {
   _isFlipped: false,
   _sessionCorrect: 0,
   _sessionIncorrect: 0,
+  // Add-card modal state
+  _addTab: 'manual',        // 'manual' | 'ai'
+  _addSubTab: 'standard',   // 'standard' | 'bulk'
+  _bulkMode: 'oddeven',     // 'oddeven' | 'twopanel'
+  _aiSource: 'notes',       // 'notes' | 'upload'
+  _aiNumCards: 10,
+  _aiVerifyCards: null,     // array of {front, back} while in verify step
+  _miniFlipped: false,
 
   render() {
     if (this._mode === 'study' && this._activeDeck)
@@ -436,19 +444,167 @@ const FlashcardsPage = {
   },
 
   openAddCardModal() {
-    App.openModal(`
-      <div class="form-group">
-        <label class="form-label">${I18N.t('fc_front')}</label>
-        <textarea class="form-textarea" id="card-front" placeholder="${I18N.lang==='vi'?'Câu hỏi, khái niệm... (hỗ trợ $toán$)':'Question, concept... (supports $math$)'}"></textarea>
-      </div>
-      <div class="form-group">
-        <label class="form-label">${I18N.t('fc_back')}</label>
-        <textarea class="form-textarea" id="card-back" placeholder="${I18N.lang==='vi'?'Đáp án, định nghĩa...':'Answer, definition...'}"></textarea>
-      </div>
-      <button class="btn btn-primary w-full" onclick="FlashcardsPage.addCard()">
-        <i data-lucide="plus"></i> ${I18N.lang==='vi'?'Thêm thẻ':'Add Card'}
+    this._miniFlipped = false;
+    this._aiVerifyCards = null;
+    App.openModal(this._buildAddCardModal(), `➕ ${I18N.t('fc_add_card')}`);
+    if (window.lucide) lucide.createIcons();
+  },
+
+  _buildAddCardModal() {
+    const lang = I18N.lang;
+    const isManual = this._addTab === 'manual';
+    const isAI     = this._addTab === 'ai';
+
+    return `
+    <div class="fc-add-tabs">
+      <button class="fc-add-tab ${isManual ? 'active' : ''}" onclick="FlashcardsPage._switchAddTab('manual')">
+        ✏️ ${lang === 'vi' ? 'Nhập tay' : 'Manual'}
       </button>
-    `, `➕ ${I18N.t('fc_add_card')}`);
+      <button class="fc-add-tab ${isAI ? 'active' : ''}" onclick="FlashcardsPage._switchAddTab('ai')">
+        🤖 ${lang === 'vi' ? 'AI hỗ trợ' : 'AI Assisted'}
+      </button>
+    </div>
+    <div id="fc-add-body">
+      ${isManual ? this._buildManualTab() : this._buildAITab()}
+    </div>`;
+  },
+
+  _switchAddTab(tab) {
+    this._addTab = tab;
+    this._miniFlipped = false;
+    this._aiVerifyCards = null;
+    const body = document.getElementById('fc-add-body');
+    if (body) body.innerHTML = tab === 'manual' ? this._buildManualTab() : this._buildAITab();
+    if (window.lucide) lucide.createIcons();
+  },
+
+  // ──────────────────────────────────────────────────────────────
+  // MANUAL TAB
+  // ──────────────────────────────────────────────────────────────
+  _buildManualTab() {
+    const lang = I18N.lang;
+    const isStd  = this._addSubTab === 'standard';
+    const isBulk = this._addSubTab === 'bulk';
+    return `
+    <div class="fc-sub-tabs">
+      <button class="fc-sub-tab ${isStd  ? 'active' : ''}" onclick="FlashcardsPage._switchSubTab('standard')">
+        🃏 ${lang === 'vi' ? 'Thẻ đơn' : 'Single Card'}
+      </button>
+      <button class="fc-sub-tab ${isBulk ? 'active' : ''}" onclick="FlashcardsPage._switchSubTab('bulk')">
+        📋 ${lang === 'vi' ? 'Nhập hàng loạt' : 'Bulk Paste'}
+      </button>
+    </div>
+    ${isStd ? this._buildStandardCard() : this._buildBulkPaste()}`;
+  },
+
+  _switchSubTab(sub) {
+    this._addSubTab = sub;
+    this._miniFlipped = false;
+    const body = document.getElementById('fc-add-body');
+    if (body) body.innerHTML = this._buildManualTab();
+    if (window.lucide) lucide.createIcons();
+  },
+
+  _buildStandardCard() {
+    const lang = I18N.lang;
+    return `
+    <div class="form-group">
+      <label class="form-label">${I18N.t('fc_front')}</label>
+      <textarea class="form-textarea" id="card-front" rows="2"
+        placeholder="${lang === 'vi' ? 'Câu hỏi, khái niệm... (hỗ trợ $toán$)' : 'Question, concept... (supports $math$)'}"
+        oninput="FlashcardsPage._updateMiniPreview()"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">${I18N.t('fc_back')}</label>
+      <textarea class="form-textarea" id="card-back" rows="2"
+        placeholder="${lang === 'vi' ? 'Đáp án, định nghĩa...' : 'Answer, definition...'}"
+        oninput="FlashcardsPage._updateMiniPreview()"></textarea>
+    </div>
+
+    <!-- Live 3D Card Preview -->
+    <p style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-bottom:0.25rem">
+      ${lang === 'vi' ? '👆 Nhấn thẻ để lật xem trước' : '👆 Click card to preview flip'}
+    </p>
+    <div class="fc-mini-preview-scene" onclick="FlashcardsPage._flipMiniCard()">
+      <div class="fc-mini-card${this._miniFlipped ? ' flipped' : ''}" id="fc-mini-card">
+        <div class="fc-mini-face front">
+          <div class="fc-mini-label">${lang === 'vi' ? 'CÂU HỎI' : 'QUESTION'}</div>
+          <div class="fc-mini-content" id="fc-mini-front">${lang === 'vi' ? 'Nhập mặt trước...' : 'Enter front...'}</div>
+        </div>
+        <div class="fc-mini-face back">
+          <div class="fc-mini-label">${lang === 'vi' ? 'ĐÁP ÁN' : 'ANSWER'}</div>
+          <div class="fc-mini-content" id="fc-mini-back">${lang === 'vi' ? 'Nhập mặt sau...' : 'Enter back...'}</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-primary w-full" onclick="FlashcardsPage.addCard()">
+      <i data-lucide="plus"></i> ${lang === 'vi' ? 'Thêm thẻ' : 'Add Card'}
+    </button>`;
+  },
+
+  _updateMiniPreview() {
+    const front = document.getElementById('card-front')?.value.trim();
+    const back  = document.getElementById('card-back')?.value.trim();
+    const fEl = document.getElementById('fc-mini-front');
+    const bEl = document.getElementById('fc-mini-back');
+    const lang = I18N.lang;
+    if (fEl) fEl.textContent = front || (lang === 'vi' ? 'Nhập mặt trước...' : 'Enter front...');
+    if (bEl) bEl.textContent = back  || (lang === 'vi' ? 'Nhập mặt sau...'  : 'Enter back...');
+  },
+
+  _flipMiniCard() {
+    this._miniFlipped = !this._miniFlipped;
+    const card = document.getElementById('fc-mini-card');
+    if (card) card.classList.toggle('flipped', this._miniFlipped);
+  },
+
+  _buildBulkPaste() {
+    const lang   = I18N.lang;
+    const isOE   = this._bulkMode === 'oddeven';
+    const is2P   = this._bulkMode === 'twopanel';
+    return `
+    <div class="fc-sub-tabs" style="margin-bottom:0.75rem">
+      <button class="fc-sub-tab ${isOE ? 'active' : ''}" onclick="FlashcardsPage._setBulkMode('oddeven')">
+        ${lang === 'vi' ? '↕ Dòng lẻ/chẵn' : '↕ Odd/Even Lines'}
+      </button>
+      <button class="fc-sub-tab ${is2P ? 'active' : ''}" onclick="FlashcardsPage._setBulkMode('twopanel')">
+        ${lang === 'vi' ? '⧉ Hai cột' : '⧉ Two Panels'}
+      </button>
+    </div>
+
+    ${isOE ? `
+      <p style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.5rem">
+        ${lang === 'vi' ? 'Dòng lẻ = mặt trước, dòng chẵn = mặt sau. Mỗi cặp 2 dòng = 1 thẻ.' : 'Odd lines = front, even lines = back. Every 2 lines = 1 card.'}
+      </p>
+      <textarea class="form-textarea" id="bulk-oe-text" style="min-height:180px;"
+        placeholder="${lang === 'vi' ? 'Hàm số là gì?\nHàm số y=f(x) là...\nĐạo hàm là gì?\nĐạo hàm là...' : 'What is a function?\nA function is y=f(x)...\nWhat is derivative?\nDerivative is...'}"
+      ></textarea>
+    ` : `
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.5rem;margin-bottom:0.4rem">
+        <label style="font-size:0.72rem;font-weight:600;color:var(--purple)">${lang === 'vi' ? '🔵 Mặt trước (mỗi dòng 1 câu)' : '🔵 Front (one per line)'}</label>
+        <label style="font-size:0.72rem;font-weight:600;color:var(--coral)">${lang === 'vi' ? '🔴 Mặt sau (mỗi dòng 1 câu)' : '🔴 Back (one per line)'}</label>
+      </div>
+      <div class="fc-two-panel">
+        <textarea class="form-textarea" id="bulk-2p-front" style="min-height:180px;"
+          placeholder="${lang === 'vi' ? 'Hàm số là gì?\nĐạo hàm là gì?\nGiới hạn là gì?' : 'What is a function?\nWhat is derivative?\nWhat is limit?'}"
+        ></textarea>
+        <textarea class="form-textarea" id="bulk-2p-back" style="min-height:180px;"
+          placeholder="${lang === 'vi' ? 'Hàm số y=f(x)...\nĐạo hàm f\u0027(x)...\nGiới hạn khi x→a...' : 'Function is y=f(x)...\nDerivative f\u0027(x)...\nLimit as x→a...'}"
+        ></textarea>
+      </div>
+    `}
+
+    <button class="btn btn-primary w-full mt-4" onclick="FlashcardsPage.importBulkCards()">
+      <i data-lucide="check"></i> ${lang === 'vi' ? 'Nhập thẻ' : 'Import Cards'}
+    </button>`;
+  },
+
+  _setBulkMode(mode) {
+    this._bulkMode = mode;
+    const body = document.getElementById('fc-add-body');
+    if (body) body.innerHTML = this._buildManualTab();
+    if (window.lucide) lucide.createIcons();
   },
 
   addCard() {
@@ -463,6 +619,276 @@ const FlashcardsPage = {
     this._activeDeck = deck;
     App.closeModal();
     App.toast(I18N.t('common_success'), 'success');
+    App.navigate('flashcards', false);
+  },
+
+  importBulkCards() {
+    const deck = Storage.getDeck(this._activeDeck.id);
+    if (!deck) return;
+    const lang = I18N.lang;
+    let newCards = [];
+
+    if (this._bulkMode === 'oddeven') {
+      const lines = (document.getElementById('bulk-oe-text')?.value || '').split('\n').map(l => l.trim());
+      for (let i = 0; i + 1 < lines.length; i += 2) {
+        const front = lines[i]; const back = lines[i + 1];
+        if (front) newCards.push(SM2.newCard(front, back || ''));
+      }
+    } else {
+      const fronts = (document.getElementById('bulk-2p-front')?.value || '').split('\n').map(l => l.trim());
+      const backs  = (document.getElementById('bulk-2p-back')?.value  || '').split('\n').map(l => l.trim());
+      const len = Math.max(fronts.length, backs.length);
+      for (let i = 0; i < len; i++) {
+        const front = fronts[i] || ''; const back = backs[i] || '';
+        if (front) newCards.push(SM2.newCard(front, back));
+      }
+    }
+
+    if (newCards.length === 0) {
+      App.toast(lang === 'vi' ? 'Không tìm thấy thẻ hợp lệ!' : 'No valid cards found!', 'error');
+      return;
+    }
+
+    deck.cards = [...(deck.cards || []), ...newCards];
+    Storage.upsertDeck(deck);
+    this._activeDeck = deck;
+    App.closeModal();
+    App.toast(`${lang === 'vi' ? 'Đã thêm' : 'Added'} ${newCards.length} ${lang === 'vi' ? 'thẻ!' : 'cards!'}`, 'success');
+    App.navigate('flashcards', false);
+  },
+
+  // ──────────────────────────────────────────────────────────────
+  // AI ASSISTED TAB
+  // ──────────────────────────────────────────────────────────────
+  _buildAITab() {
+    const lang = I18N.lang;
+    const settings = Storage.getSettings();
+    const notes = Storage.getNotes();
+    const isNotes  = this._aiSource === 'notes';
+    const isUpload = this._aiSource === 'upload';
+
+    if (this._aiVerifyCards) {
+      return this._buildVerifyStep();
+    }
+
+    return `
+    <!-- Source selector -->
+    <label style="font-size:0.75rem;font-weight:600;color:var(--text-secondary);margin-bottom:0.5rem;display:block">
+      ${lang === 'vi' ? 'Nguồn tài liệu' : 'Source Material'}
+    </label>
+    <div class="fc-ai-sources">
+      <button class="fc-ai-source-card ${isNotes ? 'active' : ''}" onclick="FlashcardsPage._setAISource('notes')">
+        <div class="src-icon">📓</div>
+        <div class="src-label">${lang === 'vi' ? 'Từ ghi chú' : 'From Notes'}</div>
+      </button>
+      <button class="fc-ai-source-card ${isUpload ? 'active' : ''}" onclick="FlashcardsPage._setAISource('upload')">
+        <div class="src-icon">📷</div>
+        <div class="src-label">${lang === 'vi' ? 'Upload tài liệu' : 'Upload Material'}</div>
+      </button>
+    </div>
+
+    <!-- Notes selector -->
+    ${isNotes ? `
+    <div class="form-group">
+      <label class="form-label">${lang === 'vi' ? 'Chọn ghi chú' : 'Select Note'}</label>
+      <select class="form-select" id="ai-note-select">
+        <option value="">${lang === 'vi' ? '-- Chọn ghi chú --' : '-- Select a note --'}</option>
+        ${notes.map(n => `<option value="${n.id}">${n.title || (lang === 'vi' ? 'Ghi chú không tiêu đề' : 'Untitled Note')}</option>`).join('')}
+      </select>
+    </div>` : `
+    <!-- Upload dropzone -->
+    <div class="ocr-dropzone" id="ai-ocr-drop" onclick="document.getElementById('ai-ocr-file').click()">
+      <div class="ocr-dropzone-icon">📷</div>
+      <h3>${lang === 'vi' ? 'Chụp/tải ảnh hoặc PDF' : 'Upload image or PDF'}</h3>
+      <p>${lang === 'vi' ? 'Hỗ trợ: JPG, PNG, PDF' : 'Supports: JPG, PNG, PDF'}</p>
+      <input type="file" id="ai-ocr-file" accept=".jpg,.jpeg,.png,.pdf" style="display:none"
+        onchange="FlashcardsPage._handleAIOCR(this.files[0])">
+    </div>
+    <div id="ai-ocr-status" style="display:none;text-align:center;padding:1rem;color:var(--text-muted);font-size:0.85rem">
+      ⚙️ ${lang === 'vi' ? 'Đang nhận dạng chữ...' : 'Running OCR...'}
+    </div>
+    <textarea class="form-textarea" id="ai-ocr-text" style="min-height:100px;margin-top:0.75rem;display:none"
+      placeholder="${lang === 'vi' ? 'Văn bản được nhận dạng (có thể chỉnh sửa)' : 'Recognized text (editable)'}"></textarea>
+    `}
+
+    <!-- Card count -->
+    <div class="form-group" style="margin-top:1rem">
+      <label class="form-label" style="display:flex;justify-content:space-between">
+        <span>${lang === 'vi' ? 'Số thẻ muốn tạo' : 'Number of cards'}</span>
+        <span style="color:var(--purple);font-weight:700" id="ai-num-label">${this._aiNumCards}</span>
+      </label>
+      <input type="range" class="fc-count-slider" id="ai-num-cards"
+        min="3" max="30" value="${this._aiNumCards}"
+        oninput="FlashcardsPage._updateCardCount(this.value)">
+      <div style="display:flex;justify-content:space-between;font-size:0.65rem;color:var(--text-muted)">
+        <span>3</span><span>10</span><span>20</span><span>30</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary w-full" id="ai-generate-btn" onclick="FlashcardsPage._generateAICards()">
+      <i data-lucide="sparkles"></i> ${lang === 'vi' ? 'Tạo thẻ với AI' : 'Generate Cards with AI'}
+    </button>
+    <p style="font-size:0.7rem;color:var(--text-muted);text-align:center;margin-top:0.5rem">
+      ${lang === 'vi' ? '(Cần Backend + Ollama đang chạy)' : '(Requires Backend + Ollama running)'}
+    </p>`;
+  },
+
+  _setAISource(src) {
+    this._aiSource = src;
+    const body = document.getElementById('fc-add-body');
+    if (body) body.innerHTML = this._buildAITab();
+    if (window.lucide) lucide.createIcons();
+  },
+
+  _updateCardCount(val) {
+    this._aiNumCards = parseInt(val);
+    const label = document.getElementById('ai-num-label');
+    if (label) label.textContent = val;
+  },
+
+  async _handleAIOCR(file) {
+    if (!file) return;
+    const settings = Storage.getSettings();
+    const dropzone = document.getElementById('ai-ocr-drop');
+    const status   = document.getElementById('ai-ocr-status');
+    const textArea = document.getElementById('ai-ocr-text');
+    if (dropzone) dropzone.style.display = 'none';
+    if (status)   status.style.display = 'block';
+
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const res = await fetch(`${settings.backendUrl}/api/ocr/image`, { method: 'POST', body: formData });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      if (textArea) { textArea.value = data.text || ''; textArea.style.display = 'block'; }
+      if (status)   status.style.display = 'none';
+    } catch(e) {
+      if (status)   status.style.display = 'none';
+      if (dropzone) dropzone.style.display = 'block';
+      App.toast(I18N.t('ai_backend_off'), 'error', 5000);
+    }
+  },
+
+  async _generateAICards() {
+    const lang = I18N.lang;
+    const settings = Storage.getSettings();
+    let text = '';
+
+    if (this._aiSource === 'notes') {
+      const noteId = document.getElementById('ai-note-select')?.value;
+      if (!noteId) { App.toast(lang === 'vi' ? 'Hãy chọn một ghi chú!' : 'Please select a note!', 'error'); return; }
+      const note = Storage.getNoteById(noteId);
+      if (note) {
+        // Flatten blocks to plain text
+        text = (note.blocks || []).map(b => {
+          if (b.type === 'text')  return b.content || '';
+          if (b.type === 'code')  return b.content || '';
+          if (b.type === 'math')  return b.content || '';
+          if (b.type === 'table') return (b.rows || []).map(r => r.join(' ')).join(' ');
+          return '';
+        }).join('\n').trim();
+        if (!text) { App.toast(lang === 'vi' ? 'Ghi chú này chưa có nội dung!' : 'This note is empty!', 'error'); return; }
+      }
+    } else {
+      text = document.getElementById('ai-ocr-text')?.value.trim() || '';
+      if (!text) { App.toast(lang === 'vi' ? 'Chưa có văn bản. Hãy upload tài liệu trước!' : 'No text found. Please upload a document first!', 'error'); return; }
+    }
+
+    const btn = document.getElementById('ai-generate-btn');
+    if (btn) { btn.disabled = true; btn.innerHTML = `<i data-lucide="loader"></i> ${lang === 'vi' ? 'Đang tạo...' : 'Generating...'}`; if (window.lucide) lucide.createIcons(); }
+
+    try {
+      const res = await fetch(`${settings.backendUrl}/api/quiz/generate-cards`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, num_cards: this._aiNumCards, language: lang }),
+      });
+      if (!res.ok) throw new Error(await res.text());
+      const data = await res.json();
+      if (!data.cards || data.cards.length === 0) throw new Error('No cards returned');
+
+      this._aiVerifyCards = data.cards;
+      const body = document.getElementById('fc-add-body');
+      if (body) body.innerHTML = this._buildVerifyStep();
+      if (window.lucide) lucide.createIcons();
+    } catch(e) {
+      App.toast(`${lang === 'vi' ? 'Lỗi tạo thẻ: ' : 'Generation error: '}${e.message}`, 'error', 5000);
+      if (btn) { btn.disabled = false; btn.innerHTML = `<i data-lucide="sparkles"></i> ${lang === 'vi' ? 'Tạo thẻ với AI' : 'Generate Cards with AI'}`; if (window.lucide) lucide.createIcons(); }
+    }
+  },
+
+  _buildVerifyStep() {
+    const lang  = I18N.lang;
+    const cards = this._aiVerifyCards || [];
+    return `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.75rem">
+      <div>
+        <div style="font-weight:700;font-size:0.9rem">${lang === 'vi' ? '✅ Xác nhận thẻ được tạo' : '✅ Verify Generated Cards'}</div>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px">
+          ${cards.length} ${lang === 'vi' ? 'thẻ — Chỉnh sửa nếu cần, bỏ tick để bỏ qua' : 'cards — Edit if needed, uncheck to skip'}
+        </div>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="FlashcardsPage._switchAddTab('ai')">
+        <i data-lucide="arrow-left"></i> ${lang === 'vi' ? 'Tạo lại' : 'Regenerate'}
+      </button>
+    </div>
+
+    <div class="fc-verify-list" id="fc-verify-list">
+      ${cards.map((c, i) => `
+      <div class="fc-verify-item selected" id="verify-item-${i}">
+        <input type="checkbox" class="fc-verify-check" id="verify-chk-${i}" checked
+          onchange="FlashcardsPage._toggleVerifyItem(${i}, this.checked)">
+        <div>
+          <div style="font-size:0.65rem;color:var(--purple);font-weight:600;margin-bottom:2px">${lang === 'vi' ? 'MẶT TRƯỚC' : 'FRONT'}</div>
+          <textarea class="fc-verify-input" id="verify-front-${i}" rows="2">${c.front}</textarea>
+        </div>
+        <div>
+          <div style="font-size:0.65rem;color:var(--coral);font-weight:600;margin-bottom:2px">${lang === 'vi' ? 'MẶT SAU' : 'BACK'}</div>
+          <textarea class="fc-verify-input" id="verify-back-${i}" rows="2">${c.back}</textarea>
+        </div>
+      </div>`).join('')}
+    </div>
+
+    <div style="display:flex;gap:0.75rem;margin-top:1rem">
+      <button class="btn btn-primary flex-1" onclick="FlashcardsPage._importVerifiedCards()">
+        <i data-lucide="check"></i> ${lang === 'vi' ? 'Thêm thẻ đã chọn' : 'Add Selected Cards'}
+      </button>
+    </div>`;
+  },
+
+  _toggleVerifyItem(i, checked) {
+    const item = document.getElementById(`verify-item-${i}`);
+    if (item) item.classList.toggle('selected', checked);
+  },
+
+  _importVerifiedCards() {
+    const deck = Storage.getDeck(this._activeDeck.id);
+    if (!deck) return;
+    const lang  = I18N.lang;
+    const cards = this._aiVerifyCards || [];
+    const newCards = [];
+
+    for (let i = 0; i < cards.length; i++) {
+      const chk = document.getElementById(`verify-chk-${i}`);
+      if (!chk?.checked) continue;
+      const front = document.getElementById(`verify-front-${i}`)?.value.trim();
+      const back  = document.getElementById(`verify-back-${i}`)?.value.trim();
+      if (front) newCards.push(SM2.newCard(front, back || ''));
+    }
+
+    if (newCards.length === 0) {
+      App.toast(lang === 'vi' ? 'Chưa chọn thẻ nào!' : 'No cards selected!', 'error');
+      return;
+    }
+
+    deck.cards = [...(deck.cards || []), ...newCards];
+    Storage.upsertDeck(deck);
+    this._activeDeck = deck;
+    this._aiVerifyCards = null;
+    App.closeModal();
+    App.toast(`${lang === 'vi' ? 'Đã thêm' : 'Added'} ${newCards.length} ${lang === 'vi' ? 'thẻ từ AI!' : 'AI cards!'}`, 'success');
+    App._updateBadges();
     App.navigate('flashcards', false);
   },
 
@@ -562,93 +988,14 @@ const FlashcardsPage = {
     App.navigate('flashcards', false);
   },
 
-  openBulkAddModal() {
-    const lang = I18N.lang;
-    App.openModal(`
-      <div class="form-group">
-        <label class="form-label">${lang === 'vi' ? 'Chọn chế độ nhập' : 'Select import mode'}</label>
-        <select class="form-select" id="bulk-import-mode" onchange="FlashcardsPage.onBulkModeChange(this.value)">
-          <option value="delimited">${lang === 'vi' ? 'Mỗi dòng một thẻ (ngăn cách bởi |)' : 'One card per line (separated by |)'}</option>
-          <option value="oddeven">${lang === 'vi' ? 'Dòng lẻ là câu hỏi, dòng chẵn là đáp án' : 'Odd lines for Front, Even lines for Back'}</option>
-        </select>
-      </div>
 
-      <div class="form-group" id="bulk-delimiter-group">
-        <label class="form-label">${lang === 'vi' ? 'Ký tự ngăn cách' : 'Delimiter'}</label>
-        <input class="form-input" id="bulk-delimiter" value="|" style="width: 80px;">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">${lang === 'vi' ? 'Nội dung nhập' : 'Paste content'}</label>
-        <textarea class="form-textarea" id="bulk-textarea" style="min-height: 200px;" 
-          placeholder="${lang === 'vi' ? 'Câu hỏi 1 | Đáp án 1\nCâu hỏi 2 | Đáp án 2' : 'Question 1 | Answer 1\nQuestion 2 | Answer 2'}"></textarea>
-      </div>
-
-      <button class="btn btn-primary w-full" onclick="FlashcardsPage.importBulkCards()">
-        <i data-lucide="check"></i> ${lang === 'vi' ? 'Nhập thẻ' : 'Import Cards'}
-      </button>
-    `, `📥 ${lang === 'vi' ? 'Nhập hàng loạt flashcard' : 'Bulk Import Flashcards'}`);
-    if (window.lucide) lucide.createIcons();
-  },
-
-  onBulkModeChange(mode) {
-    const delimiterGroup = document.getElementById('bulk-delimiter-group');
-    const textarea = document.getElementById('bulk-textarea');
-    const lang = I18N.lang;
-    if (!textarea) return;
-    if (mode === 'oddeven') {
-      if (delimiterGroup) delimiterGroup.style.display = 'none';
-      textarea.placeholder = lang === 'vi' ? 'Câu hỏi 1\nĐáp án 1\nCâu hỏi 2\nĐáp án 2' : 'Question 1\nAnswer 1\nQuestion 2\nAnswer 2';
-    } else {
-      if (delimiterGroup) delimiterGroup.style.display = 'block';
-      textarea.placeholder = lang === 'vi' ? 'Câu hỏi 1 | Đáp án 1\nCâu hỏi 2 | Đáp án 2' : 'Question 1 | Answer 1\nQuestion 2 | Answer 2';
+  destroy(nextPage) {
+    // Only reset to deck list when navigating AWAY from flashcards
+    if (nextPage !== 'flashcards') {
+      this._mode = 'decks';
+      this._activeDeck = null;
+      this._studyQueue = [];
+      this._aiVerifyCards = null;
     }
-  },
-
-  importBulkCards() {
-    const deck = Storage.getDeck(this._activeDeck.id);
-    if (!deck) return;
-
-    const mode = document.getElementById('bulk-import-mode')?.value;
-    const text = document.getElementById('bulk-textarea')?.value || '';
-    const newCards = [];
-
-    if (mode === 'oddeven') {
-      const lines = text.split('\n').map(l => l.trim());
-      for (let i = 0; i < lines.length; i += 2) {
-        const front = lines[i];
-        const back = lines[i + 1] || '';
-        if (front) {
-          newCards.push(SM2.newCard(front, back));
-        }
-      }
-    } else {
-      const delimiter = document.getElementById('bulk-delimiter')?.value || '|';
-      const lines = text.split('\n').map(l => l.trim()).filter(l => l);
-      for (const line of lines) {
-        const parts = line.split(delimiter);
-        const front = parts[0]?.trim();
-        const back = parts.slice(1).join(delimiter)?.trim() || '';
-        if (front) {
-          newCards.push(SM2.newCard(front, back));
-        }
-      }
-    }
-
-    if (newCards.length === 0) {
-      App.toast(I18N.lang === 'vi' ? 'Không tìm thấy thẻ hợp lệ!' : 'No valid cards found!', 'error');
-      return;
-    }
-
-    deck.cards = [...(deck.cards || []), ...newCards];
-    Storage.upsertDeck(deck);
-    this._activeDeck = deck;
-    App.closeModal();
-    App.toast(`${I18N.lang === 'vi' ? 'Đã thêm' : 'Added'} ${newCards.length} ${I18N.lang === 'vi' ? 'thẻ!' : 'cards!'}`, 'success');
-    App.navigate('flashcards', false);
-  },
-
-  destroy() {
-    this._mode = 'decks';
   },
 };

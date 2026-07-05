@@ -23,6 +23,13 @@ class GenerateRequest(BaseModel):
     language: str = "vi"
     document_text: Optional[str] = None   # Pre-extracted text from notes
 
+
+class GenerateCardsRequest(BaseModel):
+    text: str                   # Source material text
+    num_cards: int = 10
+    language: str = "vi"
+
+
 class GradeAnswer(BaseModel):
     question: str
     answer: str
@@ -98,7 +105,52 @@ Output the JSON array only:"""
         raise HTTPException(500, f"Generation failed: {str(e)}")
 
 
+# ── Flashcard Generation ───────────────────────────────────────
+
+@router.post("/generate-cards")
+async def generate_cards(req: GenerateCardsRequest):
+    """
+    Generate flashcard front/back pairs using Ollama from source text.
+    Returns a list of { "front": "...", "back": "..." } objects.
+    """
+    lang_instr = (
+        "Trả lời bằng tiếng Việt. " if req.language == "vi"
+        else "Answer in English. "
+    )
+    snippet = req.text[:6000]
+
+    prompt = f"""{lang_instr}You are a flashcard generator for a student study app.
+Based on the following source material, generate exactly {req.num_cards} flashcards.
+Each flashcard must have a concise FRONT (a question, term, or concept) and a clear BACK (the answer or explanation).
+
+Source material:
+---
+{snippet}
+---
+
+IMPORTANT: Respond ONLY with a valid JSON array. No explanation, no markdown fences.
+Each item must have this exact structure: {{"front": "...", "back": "..."}}
+
+Output the JSON array only:"""
+
+    try:
+        raw = rag_service._call_ollama(prompt)
+        clean = re.sub(r"```(?:json)?|```", "", raw).strip()
+        match = re.search(r"\[.*\]", clean, re.DOTALL)
+        if not match:
+            raise ValueError("No JSON array found in model response")
+        cards = json.loads(match.group())
+        validated = []
+        for c in cards:
+            if isinstance(c, dict) and "front" in c and "back" in c:
+                validated.append({"front": str(c["front"]), "back": str(c["back"])})
+        return JSONResponse({"cards": validated})
+    except Exception as e:
+        raise HTTPException(500, f"Card generation failed: {str(e)}")
+
+
 # ── Quiz Grading ───────────────────────────────────────────────
+
 
 @router.post("/grade")
 async def grade_quiz(req: GradeRequest):

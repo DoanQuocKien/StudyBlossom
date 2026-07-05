@@ -9,6 +9,7 @@ const NotesPage = {
   _autosaveTimeout: null,
   _blocks: [],      // working copy for the open note
   _onDocClick: null,
+  _sidebarCollapsed: false,
 
   // ── Main layout ──────────────────────────────────────────
   render() {
@@ -28,12 +29,17 @@ const NotesPage = {
         </button>
       </div>
 
-      <div class="notes-layout">
+      <div class="notes-layout${this._sidebarCollapsed ? ' collapsed' : ''}" id="notes-layout">
         <!-- Notes List (sidebar) -->
-        <div>
-          <div class="search-bar mb-3">
-            <i data-lucide="search"></i>
-            <input type="text" id="notes-search" placeholder="${I18N.t('notes_search')}" oninput="NotesPage.search(this.value)">
+        <div class="notes-sidebar">
+          <div class="notes-sidebar-header">
+            <div class="search-bar" style="flex:1;min-width:0">
+              <i data-lucide="search"></i>
+              <input type="text" id="notes-search" placeholder="${I18N.t('notes_search')}" oninput="NotesPage.search(this.value)">
+            </div>
+            <button class="btn btn-ghost btn-icon" onclick="NotesPage.toggleSidebar()" title="${lang === 'vi' ? 'Ẩn/hiện danh sách' : 'Toggle sidebar'}" style="flex-shrink:0">
+              <i data-lucide="panel-left-close"></i>
+            </button>
           </div>
           <div class="notes-list" id="notes-list">
             ${notes.length === 0
@@ -932,6 +938,18 @@ const NotesPage = {
       list.innerHTML = results.length === 0
         ? `<p style="padding:1rem;color:var(--text-muted);font-size:0.85rem">${I18N.lang==='vi'?'Không tìm thấy':'No results'}</p>`
         : results.map(n => this._renderNoteListItem(n)).join('');
+    }
+  },
+
+  toggleSidebar() {
+    this._sidebarCollapsed = !this._sidebarCollapsed;
+    const layout = document.getElementById('notes-layout');
+    if (layout) layout.classList.toggle('collapsed', this._sidebarCollapsed);
+    // Swap the icon without full re-render
+    const btn = document.querySelector('.notes-sidebar-header .btn-icon i[data-lucide]');
+    if (btn) {
+      btn.setAttribute('data-lucide', this._sidebarCollapsed ? 'panel-left-open' : 'panel-left-close');
+      if (window.lucide) lucide.createIcons();
     }
   },
 

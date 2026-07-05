@@ -55,9 +55,9 @@ const App = {
   navigate(pageName, updateHash = true) {
     if (!this.pages[pageName]) pageName = 'dashboard';
 
-    // Cleanup current page
+    // Cleanup current page — pass the target page so it can decide what to reset
     if (this.currentPageInstance && this.currentPageInstance.destroy) {
-      this.currentPageInstance.destroy();
+      this.currentPageInstance.destroy(pageName);
     }
 
     this.currentPage = pageName;

@@ -3,7 +3,7 @@ import subprocess
 import sys
 
 def build():
-    print("🌸 Building StudyBlossom executable using PyInstaller...")
+    print("[Build] Building StudyBlossom executable using PyInstaller...")
     try:
         import PyInstaller
     except ImportError:
@@ -26,7 +26,7 @@ def build():
     print(f"Running command: {' '.join(cmd)}")
     script_dir = os.path.dirname(os.path.abspath(__file__))
     subprocess.check_call(cmd, cwd=script_dir)
-    print("\n🎉 Build finished! Executable saved in backend/dist/StudyBlossomService.exe")
+    print("\n[Build] Build finished! Executable saved in backend/dist/StudyBlossomService.exe")
 
 if __name__ == "__main__":
     build()
