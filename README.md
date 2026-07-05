@@ -39,9 +39,14 @@
 
 > `start.bat` tự động phát hiện môi trường chạy tốt nhất, **tự cài Ollama** nếu chưa có, và **tự tải model Gemma3** ở nền.
 
+💡 **Cách thiết lập nhanh & dễ dàng nhất (Không cần cài đặt Python)**:
+1. Tải file dịch vụ chạy sẵn `StudyBlossomService.exe` tại [đây (Google Drive)](https://drive.google.com/file/d/1k6Ds0BPCrdSa4JCyjxt3s92HwGayJxFK/view?usp=sharing).
+2. Lưu/Copy file vừa tải vào thư mục `backend/dist/` (tạo thư mục `dist` trong thư mục `backend` nếu chưa có).
+3. Chạy file `start.bat` ở thư mục gốc để bắt đầu học tập ngay lập tức!
+
 | Ưu tiên | Phát hiện | Hành động |
 |---|---|---|
-| 1️⃣ | `backend/dist/StudyBlossomService.exe` | Chạy trực tiếp (nhanh nhất, **không cần Python**) |
+| 1️⃣ | `backend/dist/StudyBlossomService.exe` | Chạy trực tiếp (nhanh nhất, **không cần cài Python/thư viện**) |
 | 2️⃣ | Python toàn cục đã cài | Chạy `python main.py` trực tiếp |
 | 3️⃣ | Portable Python đã setup (`.python/`) | Dùng Python cục bộ |
 | 4️⃣ | Không có gì | Tự tải & cấu hình Python portable (một lần duy nhất) |
@@ -68,6 +73,8 @@ Sau khi khởi động backend, `start.bat` còn:
 
 Mỗi ghi chú là một tập hợp **khối (block)** có thể thêm, xóa, di chuyển tự do:
 
+- **Thanh tìm kiếm thu gọn**: Có nút ẩn/hiện danh sách ghi chú ở góc trên sidebar để mở rộng không gian viết và đọc ghi chú tối đa.
+
 | Loại khối | Tính năng |
 |---|---|
 | 📝 **Văn bản** | Rich text: in đậm, in nghiêng, gạch chân, danh sách, highlight, toán KaTeX, OCR, chèn biểu đồ |
@@ -77,6 +84,21 @@ Mỗi ghi chú là một tập hợp **khối (block)** có thể thêm, xóa, d
 | 📊 **Bảng / Sơ đồ** | Bảng chỉnh sửa trực tiếp (thêm/xóa hàng, cột, xuất CSV) hoặc chuyển sang tab 📐 để nhúng trực tiếp bất kỳ sơ đồ Mermaid đã lưu (DSA, OOP, Digital Circuits...) |
 
 **Xuất PDF**: Tất cả khối được kết hợp thành 1 file PDF — ảnh nhúng thật (data URL), sơ đồ nhúng SVG vector, toán render KaTeX.
+
+---
+
+### 📚 Thẻ ghi nhớ (Flashcard) — Nhập đa năng & AI hỗ trợ (mới)
+
+Hệ thống quản lý và thêm thẻ được thiết kế trực quan với 2 chế độ chính:
+1. **✏️ Nhập tay (Manual Mode)**:
+   - **Thẻ đơn**: Xem trước trực quan (mô phỏng thẻ 3D lật mặt trước/sau khi gõ). Nhấn thẻ để lật kiểm tra.
+   - **Nhập hàng loạt**:
+     - *Dòng lẻ/chẵn*: Dòng lẻ là câu hỏi, dòng chẵn là đáp án (mỗi cặp 2 dòng = 1 thẻ).
+     - *Hai cột*: Nhập danh sách mặt trước và mặt sau độc lập theo từng cột song song (tạo thẻ tương ứng theo dòng).
+2. **🤖 AI hỗ trợ (AI-Assisted Mode)**:
+   - Tự động tạo thẻ từ ghi chú bất kỳ hoặc từ tài liệu quét OCR (chụp ảnh/tải PDF).
+   - Chọn số lượng thẻ muốn tạo (3-30) bằng thanh trượt.
+   - **Bước xác thực (Verify Step)**: Xem lại toàn bộ danh sách thẻ do AI tạo, chỉnh sửa trực tiếp nội dung hoặc bỏ tích chọn các câu không đạt trước khi lưu vào bộ thẻ.
 
 ---
 
