@@ -16,7 +16,7 @@ env/
 
 # ── PyInstaller build artifacts (very large, not needed in repo) ──
 backend/build/
-# NOTE: backend/dist/StudyBloomBackend.exe IS tracked via Git LFS — keep it
+backend/dist/
 
 # ── Portable Python (auto-downloaded, not for repo) ─────────
 .python/

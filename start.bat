@@ -161,7 +161,31 @@ rem ============================================================
 rem  LAUNCH FRONTEND
 rem ============================================================
 :launch_frontend
-timeout /t 3 /nobreak >nul
+echo.
+echo [Backend] Waiting for StudyBlossom Service to start...
+set /a attempt=0
+
+:wait_loop
+set /a attempt+=1
+curl -s -m 1 http://localhost:8000/api/health >nul 2>&1
+if %errorlevel% equ 0 goto backend_ready
+
+echo [Backend] Service not ready yet, waiting... (attempt %attempt%/300)
+timeout /t 1 /nobreak >nul
+if %attempt% lss 300 goto wait_loop
+
+echo [WARNING] StudyBlossom Service is taking a long time to start.
+echo [WARNING] Opening frontend anyway...
+goto do_launch
+
+:backend_ready
+echo [Backend] Service is ready and listening!
+rem Play a friendly beep notification sound
+powershell -Command "[console]::beep(1000, 300)" >nul 2>&1
+rem Trigger a native Windows toast notification to notify user
+powershell -Command "[Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null; [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null; $xml = [Windows.Data.Xml.Dom.XmlDocument]::New(); $xml.LoadXml('<toast><visual><binding template=''ToastGeneric''><text>StudyBlossom 🌸</text><text>StudyBlossom Service is ready! Opening in browser...</text></binding></visual></toast>'); $toast = [Windows.UI.Notifications.ToastNotification]::new($xml); [Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('PowerShell').Show($toast)" >nul 2>&1
+
+:do_launch
 echo.
 echo [Frontend] Opening StudyBlossom in browser...
 cd /d "%~dp0"

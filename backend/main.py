@@ -73,4 +73,14 @@ async def health():
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    import multiprocessing
+    multiprocessing.freeze_support()
+
+    import sys
+    is_frozen = getattr(sys, 'frozen', False)
+    if is_frozen:
+        # When running as a packaged executable, pass the app object directly and disable reload
+        uvicorn.run(app, host="0.0.0.0", port=8000)
+    else:
+        # Local development mode with reload enabled
+        uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
