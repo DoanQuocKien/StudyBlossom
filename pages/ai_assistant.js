@@ -6,6 +6,7 @@ const AIPage = {
   _messages: [],
   _isLoading: false,
   _abortController: null,
+  _statusInterval: null,
 
   render() {
     const docs = Storage.getRagDocuments();
@@ -108,7 +109,7 @@ const AIPage = {
     return `
     <div style="text-align:center;padding:2rem;color:var(--text-muted)">
       <div style="font-size:3rem;margin-bottom:1rem">🤖</div>
-      <h3 style="color:var(--text-secondary);margin-bottom:0.5rem">${lang==='vi'?'Xin chào! Tôi là trợ lý AI của bạn':'Hello! I\'m your AI Study Assistant'}</h3>
+      <h3 style="color:var(--text-secondary);margin-bottom:0.5rem">${lang==='vi'?'Xin chào! Tôi là trợ lý AI của Thơ':'Hello! I\'m your AI Study Assistant'}</h3>
       <p style="font-size:0.875rem">${lang==='vi'?'Tải tài liệu lên để tôi có thể trả lời các câu hỏi dựa trên nội dung của chúng.':'Upload your documents and I\'ll answer questions based on their content.'}</p>
       <p style="font-size:0.75rem;margin-top:0.5rem;color:var(--text-muted)">${lang==='vi'?'(Cần dịch vụ nền đang chạy — xem start.bat)':'(Requires background service running — see start.bat)'}</p>
     </div>`;
@@ -131,6 +132,16 @@ const AIPage = {
     this._checkBackendStatus();
     this._scrollToBottom();
     if (window.lucide) lucide.createIcons();
+
+    // Check backend status periodically every 5 seconds
+    this._statusInterval = setInterval(() => this._checkBackendStatus(), 5000);
+  },
+
+  destroy() {
+    if (this._statusInterval) {
+      clearInterval(this._statusInterval);
+      this._statusInterval = null;
+    }
   },
 
   async _checkBackendStatus() {

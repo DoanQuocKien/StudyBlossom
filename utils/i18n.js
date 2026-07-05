@@ -272,7 +272,7 @@ const I18N = {
     { vi: 'Toán rời rạc hay DSA cũng không đáng sợ khi có đam mê. 🔥',       en: 'Discrete math or DSA is not scary when you\'re passionate. 🔥' },
     { vi: 'Nghỉ ngơi cũng là một phần của việc học. Đừng quên chăm sóc bản thân! 💕', en: 'Rest is part of learning. Don\'t forget to take care of yourself! 💕' },
     { vi: 'Hôm nay cố gắng, ngày mai gặt hái! 🌱',                           en: 'Effort today, results tomorrow! 🌱' },
-    { vi: 'Cố gắng lên! Mỗi bước nhỏ đều đáng trân trọng. 🩷',              en: 'Keep it up! Every small step counts. 🩷' },
+    { vi: 'Thơ giỏi lắm! Mỗi bước nhỏ đều đáng trân trọng. 🩷',              en: 'You\'re amazing! Every small step counts. 🩷' },
   ],
 
   randomQuote() {

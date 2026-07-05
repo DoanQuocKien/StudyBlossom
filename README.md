@@ -1,5 +1,5 @@
 # StudyBlossom 🌸
-### *Hệ thống học tập cá nhân* 💜
+### *Hệ thống học tập cá nhân dành cho Nguyễn Hoàng Thơ* 💜
 
 ---
 
@@ -175,4 +175,4 @@ StudyBlossom/
 
 ---
 
-Made with 💜
+Made with 💜 for Nguyễn Hoàng Thơ

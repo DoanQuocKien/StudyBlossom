@@ -12,7 +12,7 @@ const DEFAULT_SUBJECTS = [
 ];
 
 const DEFAULT_SETTINGS = {
-  name: 'Bạn',
+  name: 'Thơ',
   language: 'vi',
   pomodoroWork: 25,
   pomodoroShort: 5,

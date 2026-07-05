@@ -125,7 +125,7 @@ const App = {
   _updateGreeting() {
     const settings = Storage.getSettings();
     const greetEl = document.getElementById('sidebar-greeting');
-    if (greetEl) greetEl.textContent = I18N.greeting(settings.name || 'Bạn');
+    if (greetEl) greetEl.textContent = I18N.greeting(settings.name || 'Thơ');
   },
 
   // ── Nav ───────────────────────────────────────────────────
