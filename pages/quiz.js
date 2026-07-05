@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — Quiz / Testing Center
+// StudyBlossom 🌸 — Quiz / Testing Center
 // Modes: list | run | result | edit | ai-gen | raw-view | raw-result
 // ============================================================
 
@@ -928,7 +928,7 @@ Each item must have this exact structure:
     const t    = this._rawTest;
     const lang = I18N.lang;
     const bundle = {
-      studybloom: 'test-export-v1',
+      studyblossom: 'test-export-v1',
       exported:   new Date().toISOString(),
       name:       t.name,
       subject:    Storage.getSubjectById(t.subjectId)?.name || '',

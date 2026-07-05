@@ -1,5 +1,5 @@
 # ============================================================
-# StudyBloom 🌸 — FastAPI Backend
+# StudyBlossom 🌸 — FastAPI Service
 # ============================================================
 
 from fastapi import FastAPI
@@ -20,7 +20,7 @@ from routers import ocr, rag, quiz
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Initialize services on startup."""
-    print("🌸 StudyBloom backend starting...")
+    print("🌸 StudyBlossom service starting...")
     # Pre-load OCR models in background
     try:
         from services.ocr_service import ocr_service
@@ -34,14 +34,14 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         print(f"⚠️  RAG service init warning: {e}")
 
-    print("🌸 Backend ready at http://localhost:8000")
+    print("🌸 Service ready at http://localhost:8000")
     yield
-    print("👋 StudyBloom backend shutting down...")
+    print("👋 StudyBlossom service shutting down...")
 
 
 app = FastAPI(
-    title="StudyBloom API 🌸",
-    description="Backend for StudyBloom — OCR + RAG Study Assistant",
+    title="StudyBlossom API 🌸",
+    description="Service Provider for StudyBlossom — Text Scanner + AI Study Assistant",
     version="1.0.0",
     lifespan=lifespan,
 )
@@ -68,7 +68,7 @@ async def health():
     return {
         "status": "ok",
         "model":  rag_service.model_name if hasattr(rag_service, "model_name") else "ollama",
-        "app":    "StudyBloom 🌸",
+        "app":    "StudyBlossom 🌸",
     }
 
 

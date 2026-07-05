@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — Dashboard Page
+// StudyBlossom 🌸 — Dashboard Page
 // ============================================================
 
 const DashboardPage = {
@@ -7,7 +7,7 @@ const DashboardPage = {
 
   render() {
     const settings   = Storage.getSettings();
-    const name       = settings.name || 'Thơ';
+    const name       = settings.name || 'Bạn';
     const streak     = Storage.getStreak();
     const sessions   = Storage.getStudySessions();
     const totalMins  = sessions.reduce((s, x) => s + (x.minutes || 0), 0);

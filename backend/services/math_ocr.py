@@ -1,5 +1,5 @@
 """
-StudyBloom 🌸 — Math OCR Service
+StudyBlossom 🌸 — Math OCR Service
 Uses pix2tex (LaTeX-OCR) for single math equation images.
 CPU-only, works on images of isolated formulas.
 """

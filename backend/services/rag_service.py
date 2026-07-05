@@ -1,5 +1,5 @@
 """
-StudyBloom 🌸 — RAG Service
+StudyBlossom 🌸 — RAG Service
 Pipeline:
   text → chunk → embed (sentence-transformers) → store (ChromaDB) → retrieve → answer (Ollama)
 """
@@ -40,7 +40,7 @@ class RAGService:
                 import chromadb
                 client = chromadb.PersistentClient(path=str(CHROMA_DIR))
                 self._collection = client.get_or_create_collection(
-                    name="studybloom_docs",
+                    name="studyblossom_docs",
                     metadata={"hnsw:space": "cosine"},
                 )
                 print(f"✅ ChromaDB ready ({self._collection.count()} chunks)")

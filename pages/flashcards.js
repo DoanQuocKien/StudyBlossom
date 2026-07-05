@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — Flashcards Page (SM-2 Spaced Repetition)
+// StudyBlossom 🌸 — Flashcards Page (SM-2 Spaced Repetition)
 // ============================================================
 
 const FlashcardsPage = {

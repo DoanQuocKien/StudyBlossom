@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — Prompt Optimizer Page
+// StudyBlossom 🌸 — Prompt Optimizer Page
 // ============================================================
 
 const PromptPage = {

@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — Notes Page (Block Editor)
+// StudyBlossom 🌸 — Notes Page (Block Editor)
 // 5 block types: text | code | image | math | table
 // ============================================================
 

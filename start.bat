@@ -1,18 +1,18 @@
 @echo off
-title StudyBloom - Startup
+title StudyBlossom - Startup
 color 0D
 echo.
 echo  ==========================================
-echo   StudyBloom - Starting...
+echo   StudyBlossom - Starting...
 echo  ==========================================
 echo.
 
 rem ============================================================
 rem  PRIORITY 1: Pre-compiled EXE (fastest, no Python needed)
 rem ============================================================
-if exist "%~dp0backend\dist\StudyBloomBackend.exe" (
+if exist "%~dp0backend\dist\StudyBlossomService.exe" (
     echo [EXE] Pre-compiled backend found. Starting...
-    start "StudyBloom Backend" "%~dp0backend\dist\StudyBloomBackend.exe"
+    start "StudyBlossom Service" "%~dp0backend\dist\StudyBlossomService.exe"
     goto setup_ollama
 )
 
@@ -37,7 +37,7 @@ rem ============================================================
 rem  PRIORITY 4: Download portable Python (first run)
 rem ============================================================
 echo [Setup] No Python or pre-built EXE found.
-echo [Setup] StudyBloom will download a portable Python environment.
+echo [Setup] StudyBlossom will download a portable Python environment.
 echo [Setup] This is a one-time setup and does NOT modify your system.
 echo.
 choice /M "Continue with automatic setup?"
@@ -86,7 +86,7 @@ echo.
 cd /d "%~dp0"
 
 :run_with_portable_python
-start "StudyBloom Backend" cmd /k "cd /d "%~dp0backend" && "%~dp0.python\python.exe" main.py"
+start "StudyBlossom Service" cmd /k "cd /d "%~dp0backend" && "%~dp0.python\python.exe" main.py"
 goto setup_ollama
 
 :run_with_global_python
@@ -97,7 +97,7 @@ if not exist ".deps_installed" (
     echo. > .deps_installed
 )
 echo [Backend] Starting FastAPI...
-start "StudyBloom Backend" cmd /k "cd /d "%~dp0backend" && python main.py"
+start "StudyBlossom Service" cmd /k "cd /d "%~dp0backend" && python main.py"
 
 rem ============================================================
 rem  OLLAMA + GEMMA3 SETUP (AI features)
@@ -154,7 +154,7 @@ goto launch_frontend
 :pull_gemma
 echo [AI] Pulling Gemma3 model (first time ~3-5 GB, runs in background)...
 start "" cmd /c "ollama pull gemma3 && echo [AI] Gemma3 ready! || echo [AI] Gemma3 pull failed - retry with: ollama pull gemma3"
-echo [AI] Model pull started in background. StudyBloom will load now.
+echo [AI] Model pull started in background. StudyBlossom will load now.
 echo [AI] If Gemma3 is already downloaded, this completes instantly.
 
 rem ============================================================
@@ -163,13 +163,13 @@ rem ============================================================
 :launch_frontend
 timeout /t 3 /nobreak >nul
 echo.
-echo [Frontend] Opening StudyBloom in browser...
+echo [Frontend] Opening StudyBlossom in browser...
 cd /d "%~dp0"
 start "" "%~dp0index.html"
 
 echo.
 echo  ==========================================
-echo   StudyBloom is running!
+echo   StudyBlossom is running!
 echo   Frontend : file://%~dp0index.html
 echo   Backend  : http://localhost:8000
 echo   API Docs : http://localhost:8000/docs
@@ -179,6 +179,6 @@ echo.
 echo  Press any key to stop the backend and exit...
 pause >nul
 
-taskkill /f /im StudyBloomBackend.exe >nul 2>&1
-taskkill /f /fi "WINDOWTITLE eq StudyBloom Backend" >nul 2>&1
+taskkill /f /im StudyBlossomService.exe >nul 2>&1
+taskkill /f /fi "WINDOWTITLE eq StudyBlossom Service" >nul 2>&1
 echo Backend stopped. Goodbye!

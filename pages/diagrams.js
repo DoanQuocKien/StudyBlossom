@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — Diagrams Page
+// StudyBlossom 🌸 — Diagrams Page
 // Mermaid.js (text-to-diagram) + Excalidraw (free-draw)
 // ============================================================
 

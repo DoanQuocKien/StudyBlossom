@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — Storage Utility
+// StudyBlossom 🌸 — Storage Utility
 // All localStorage operations go through here
 // ============================================================
 
@@ -12,7 +12,7 @@ const DEFAULT_SUBJECTS = [
 ];
 
 const DEFAULT_SETTINGS = {
-  name: 'Thơ',
+  name: 'Bạn',
   language: 'vi',
   pomodoroWork: 25,
   pomodoroShort: 5,
@@ -21,8 +21,31 @@ const DEFAULT_SETTINGS = {
   theme: 'dark',
 };
 
+// Run prefix migration from studybloom_ to studyblossom_ to prevent data loss
+(() => {
+  const oldPrefix = 'studybloom_';
+  const newPrefix = 'studyblossom_';
+  try {
+    const keysToMigrate = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(oldPrefix)) {
+        keysToMigrate.push(key);
+      }
+    }
+    keysToMigrate.forEach(key => {
+      const newKey = newPrefix + key.substring(oldPrefix.length);
+      if (!localStorage.getItem(newKey)) {
+        localStorage.setItem(newKey, localStorage.getItem(key));
+      }
+    });
+  } catch (e) {
+    console.error('[Storage] Prefix migration failed:', e);
+  }
+})();
+
 const Storage = {
-  PREFIX: 'studybloom_',
+  PREFIX: 'studyblossom_',
 
   _get(key) {
     try {

@@ -1,5 +1,5 @@
 # ============================================================
-# StudyBloom 🌸 — OCR Router
+# StudyBlossom 🌸 — OCR Router
 # ============================================================
 
 from fastapi import APIRouter, UploadFile, File, HTTPException

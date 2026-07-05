@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — App Router & Global Controller
+// StudyBlossom 🌸 — App Router & Global Controller
 // ============================================================
 
 const App = {
@@ -48,7 +48,7 @@ const App = {
     // Update greeting every minute
     setInterval(() => this._updateGreeting(), 60000);
 
-    console.log('🌸 StudyBloom initialized!');
+    console.log('🌸 StudyBlossom initialized!');
   },
 
   // ── Routing ───────────────────────────────────────────────
@@ -125,7 +125,7 @@ const App = {
   _updateGreeting() {
     const settings = Storage.getSettings();
     const greetEl = document.getElementById('sidebar-greeting');
-    if (greetEl) greetEl.textContent = I18N.greeting(settings.name || 'Thơ');
+    if (greetEl) greetEl.textContent = I18N.greeting(settings.name || 'Bạn');
   },
 
   // ── Nav ───────────────────────────────────────────────────

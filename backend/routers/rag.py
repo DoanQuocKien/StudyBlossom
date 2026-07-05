@@ -1,5 +1,5 @@
 # ============================================================
-# StudyBloom 🌸 — RAG Router
+# StudyBlossom 🌸 — RAG Router
 # ============================================================
 
 from fastapi import APIRouter, UploadFile, File, HTTPException

@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — Internationalization (EN / VI)
+// StudyBlossom 🌸 — Internationalization (EN / VI)
 // ============================================================
 
 const I18N = {
@@ -97,7 +97,7 @@ const I18N = {
     fc_incorrect:         { vi: 'Sai',                    en: 'Incorrect' },
     fc_no_due:            { vi: 'Không có thẻ nào cần ôn hôm nay! 🎉', en: 'No cards due today! 🎉' },
     fc_mastered:          { vi: 'Đã thuộc',               en: 'Mastered' },
-    fc_ocr_import:        { vi: 'Nhập từ ảnh (OCR)',       en: 'Import from Image (OCR)' },
+    fc_ocr_import:        { vi: 'Nhận diện chữ từ ảnh',   en: 'Extract text from Image' },
 
     // ── Quiz ────────────────────────────────────────────────
     quiz_title:           { vi: 'Bài kiểm tra',           en: 'Quiz' },
@@ -129,7 +129,7 @@ const I18N = {
     notes_content_ph:     { vi: 'Bắt đầu viết...',        en: 'Start writing...' },
     notes_save:           { vi: 'Lưu',                    en: 'Save' },
     notes_delete:         { vi: 'Xóa',                    en: 'Delete' },
-    notes_ocr:            { vi: 'Nhập từ ảnh (OCR)',       en: 'OCR from Image' },
+    notes_ocr:            { vi: 'Nhận diện chữ từ ảnh',   en: 'Extract text from Image' },
     notes_export:         { vi: 'Xuất PDF',               en: 'Export PDF' },
     notes_no_notes:       { vi: 'Chưa có ghi chú nào',    en: 'No notes yet' },
     notes_subject:        { vi: 'Môn học',                en: 'Subject' },
@@ -167,13 +167,13 @@ const I18N = {
     // ── AI Assistant ────────────────────────────────────────
     ai_title:             { vi: 'Trợ lý AI',              en: 'AI Assistant' },
     ai_upload:            { vi: 'Tải tài liệu lên',       en: 'Upload Document' },
-    ai_ocr_upload:        { vi: 'Tải ảnh/PDF lên & OCR',  en: 'Upload Image/PDF + OCR' },
+    ai_ocr_upload:        { vi: 'Tải ảnh/PDF lên để quét', en: 'Upload Image/PDF to scan' },
     ai_query_ph:          { vi: 'Hỏi bất cứ điều gì về tài liệu của bạn...', en: 'Ask anything about your documents...' },
     ai_send:              { vi: 'Gửi',                    en: 'Send' },
-    ai_docs_indexed:      { vi: 'Tài liệu đã lập chỉ mục', en: 'Indexed Documents' },
+    ai_docs_indexed:      { vi: 'Tài liệu học tập',       en: 'Study Materials' },
     ai_no_docs:           { vi: 'Chưa có tài liệu nào',   en: 'No documents yet' },
     ai_thinking:          { vi: 'Đang suy nghĩ...',       en: 'Thinking...' },
-    ai_backend_off:       { vi: 'Backend chưa khởi động. Chạy start.bat trước.', en: 'Backend offline. Run start.bat first.' },
+    ai_backend_off:       { vi: 'Dịch vụ nền chưa hoạt động. Chạy start.bat trước.', en: 'Background service offline. Run start.bat first.' },
     ai_summarize:         { vi: 'Tóm tắt tài liệu này',   en: 'Summarize this document' },
     ai_gen_quiz:          { vi: 'Tạo quiz từ tài liệu này', en: 'Generate quiz from this' },
     ai_clear_chat:        { vi: 'Xóa chat',               en: 'Clear Chat' },
@@ -272,7 +272,7 @@ const I18N = {
     { vi: 'Toán rời rạc hay DSA cũng không đáng sợ khi có đam mê. 🔥',       en: 'Discrete math or DSA is not scary when you\'re passionate. 🔥' },
     { vi: 'Nghỉ ngơi cũng là một phần của việc học. Đừng quên chăm sóc bản thân! 💕', en: 'Rest is part of learning. Don\'t forget to take care of yourself! 💕' },
     { vi: 'Hôm nay cố gắng, ngày mai gặt hái! 🌱',                           en: 'Effort today, results tomorrow! 🌱' },
-    { vi: 'Thơ giỏi lắm! Mỗi bước nhỏ đều đáng trân trọng. 🩷',              en: 'You\'re amazing! Every small step counts. 🩷' },
+    { vi: 'Cố gắng lên! Mỗi bước nhỏ đều đáng trân trọng. 🩷',              en: 'Keep it up! Every small step counts. 🩷' },
   ],
 
   randomQuote() {

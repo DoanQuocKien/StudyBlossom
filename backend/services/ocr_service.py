@@ -1,5 +1,5 @@
 """
-StudyBloom 🌸 — OCR Service
+StudyBlossom 🌸 — OCR Service
 CPU-only stack:
   - pdfplumber  → extract digital PDF text (instant)
   - PaddleOCR   → general handwritten/printed text from images

@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — Study Planner Page
+// StudyBlossom 🌸 — Study Planner Page
 // ============================================================
 
 const PlannerPage = {

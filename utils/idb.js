@@ -1,27 +1,88 @@
 // ============================================================
-// StudyBloom 🌸 — IndexedDB Utility (for large binary files)
+// StudyBlossom 🌸 — IndexedDB Utility (for large binary files)
 // Used by: Raw Test sessions (test papers + answer images)
 // ============================================================
 
 const IDB = (() => {
-  const DB_NAME    = 'StudyBloomFiles';
-  const DB_VERSION = 1;
-  const STORE      = 'files';
+  const DB_NAME     = 'StudyBlossomFiles';
+  const OLD_DB_NAME = 'StudyBloomFiles';
+  const DB_VERSION  = 1;
+  const STORE       = 'files';
 
   let _db = null;
 
   function open() {
     if (_db) return Promise.resolve(_db);
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open(DB_NAME, DB_VERSION);
-      req.onupgradeneeded = e => {
-        const db = e.target.result;
-        if (!db.objectStoreNames.contains(STORE)) {
-          db.createObjectStore(STORE, { keyPath: 'id' });
-        }
+      // Check and migrate records from old database
+      const checkAndMigrate = () => {
+        return new Promise(res => {
+          let wasExisting = true;
+          const oldReq = indexedDB.open(OLD_DB_NAME);
+          oldReq.onupgradeneeded = () => {
+            wasExisting = false; // DB didn't exist before, no need to migrate
+          };
+          oldReq.onsuccess = e => {
+            const oldDb = e.target.result;
+            if (wasExisting && oldDb.objectStoreNames.contains(STORE)) {
+              try {
+                const tx = oldDb.transaction(STORE, 'readonly');
+                const store = tx.objectStore(STORE);
+                const getReq = store.getAll();
+                getReq.onsuccess = ev => {
+                  const records = ev.target.result;
+                  oldDb.close();
+                  res(records || []);
+                };
+                getReq.onerror = () => { oldDb.close(); res([]); };
+              } catch {
+                oldDb.close();
+                res([]);
+              }
+            } else {
+              oldDb.close();
+              if (!wasExisting) {
+                // Clean up the dummy database created by the open check
+                indexedDB.deleteDatabase(OLD_DB_NAME);
+              }
+              res([]);
+            }
+          };
+          oldReq.onerror = () => res([]);
+        });
       };
-      req.onsuccess = e => { _db = e.target.result; resolve(_db); };
-      req.onerror   = e => reject(e.target.error);
+
+      const doOpenNew = (recordsToMigrate = []) => {
+        const req = indexedDB.open(DB_NAME, DB_VERSION);
+        req.onupgradeneeded = e => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE)) {
+            db.createObjectStore(STORE, { keyPath: 'id' });
+          }
+        };
+        req.onsuccess = e => {
+          _db = e.target.result;
+          if (recordsToMigrate.length > 0) {
+            const tx = _db.transaction(STORE, 'readwrite');
+            const store = tx.objectStore(STORE);
+            recordsToMigrate.forEach(r => store.put(r));
+            tx.oncomplete = () => {
+              indexedDB.deleteDatabase(OLD_DB_NAME);
+              resolve(_db);
+            };
+            tx.onerror = () => resolve(_db);
+          } else {
+            resolve(_db);
+          }
+        };
+        req.onerror = e => reject(e.target.error);
+      };
+
+      checkAndMigrate().then(records => {
+        doOpenNew(records);
+      }).catch(() => {
+        doOpenNew();
+      });
     });
   }
 

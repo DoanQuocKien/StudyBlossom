@@ -1,5 +1,5 @@
 # ============================================================
-# StudyBloom 🌸 — Quiz Router (AI Generate + AI Grade)
+# StudyBlossom 🌸 — Quiz Router (AI Generate + AI Grade)
 # ============================================================
 
 from fastapi import APIRouter, UploadFile, File, HTTPException

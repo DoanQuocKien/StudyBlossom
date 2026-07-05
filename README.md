@@ -1,5 +1,5 @@
-# StudyBloom 🌸
-### *Hệ thống học tập cá nhân dành cho Nguyễn Hoàng Thơ* 💜
+# StudyBlossom 🌸
+### *Hệ thống học tập cá nhân* 💜
 
 ---
 
@@ -41,7 +41,7 @@
 
 | Ưu tiên | Phát hiện | Hành động |
 |---|---|---|
-| 1️⃣ | `backend/dist/StudyBloomBackend.exe` | Chạy trực tiếp (nhanh nhất, **không cần Python**) |
+| 1️⃣ | `backend/dist/StudyBlossomService.exe` | Chạy trực tiếp (nhanh nhất, **không cần Python**) |
 | 2️⃣ | Python toàn cục đã cài | Chạy `python main.py` trực tiếp |
 | 3️⃣ | Portable Python đã setup (`.python/`) | Dùng Python cục bộ |
 | 4️⃣ | Không có gì | Tự tải & cấu hình Python portable (một lần duy nhất) |
@@ -119,7 +119,7 @@ pip install pyinstaller
 python build_exe.py
 ```
 
-File tạo ra: `backend/dist/StudyBloomBackend.exe` — được theo dõi qua **Git LFS** (không làm nặng repo).
+File tạo ra: `backend/dist/StudyBlossomService.exe` — được theo dõi qua **Git LFS** (không làm nặng repo).
 
 ---
 
@@ -157,7 +157,7 @@ StudyBlossom/
     ├── routers/
     ├── services/
     └── dist/
-        └── StudyBloomBackend.exe   ← Git LFS
+        └── StudyBlossomService.exe   ← Git LFS
 ```
 
 ---
@@ -175,4 +175,4 @@ StudyBlossom/
 
 ---
 
-Made with 💜 for Nguyễn Hoàng Thơ
+Made with 💜

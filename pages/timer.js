@@ -1,5 +1,5 @@
 // ============================================================
-// StudyBloom 🌸 — Timer Page (Pomodoro)
+// StudyBlossom 🌸 — Timer Page (Pomodoro)
 // ============================================================
 
 const TimerPage = {
@@ -278,7 +278,7 @@ const TimerPage = {
     const mins = String(Math.floor(this._remaining / 60)).padStart(2, '0');
     const secs = String(this._remaining % 60).padStart(2, '0');
     el.textContent = `${mins}:${secs}`;
-    document.title = `${mins}:${secs} — StudyBloom 🌸`;
+    document.title = `${mins}:${secs} — StudyBlossom 🌸`;
 
     // Update ring
     const pct = this._totalSeconds > 0 ? (this._remaining / this._totalSeconds) : 1;
@@ -298,7 +298,7 @@ const TimerPage = {
   _onComplete() {
     this._stopInterval();
     this._running = false;
-    document.title = 'StudyBloom 🌸';
+    document.title = 'StudyBlossom 🌸';
 
     // Log completed work session
     if (this._mode === 'work') {
@@ -321,7 +321,7 @@ const TimerPage = {
 
     // Browser notification
     if (Notification.permission === 'granted') {
-      new Notification('StudyBloom 🌸', {
+      new Notification('StudyBlossom 🌸', {
         body: this._mode === 'work'
           ? (I18N.lang==='vi'?'Phiên học hoàn thành! Nghỉ ngơi nhé~':'Session done! Take a break~')
           : (I18N.lang==='vi'?'Hết giờ nghỉ! Tiếp tục nào!':'Break over! Let\'s go!'),

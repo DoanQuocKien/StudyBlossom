@@ -35,7 +35,7 @@ exe = EXE(
     a.binaries,
     a.datas,
     [],
-    name='StudyBloomBackend',
+    name='StudyBlossomService',
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
