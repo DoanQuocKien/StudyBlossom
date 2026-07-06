@@ -40,7 +40,7 @@
 > `start.bat` tự động phát hiện môi trường chạy tốt nhất, **tự cài Ollama** nếu chưa có, và **tự tải model Gemma3** ở nền.
 
 💡 **Cách thiết lập nhanh & dễ dàng nhất (Không cần cài đặt Python)**:
-1. Tải file dịch vụ chạy sẵn `StudyBlossomService.exe` tại [đây (Google Drive)](https://drive.google.com/file/d/1k6Ds0BPCrdSa4JCyjxt3s92HwGayJxFK/view?usp=sharing).
+1. Tải file dịch vụ chạy sẵn `StudyBlossomService.exe` tại [đây (Google Drive)](https://drive.google.com/drive/folders/1tqH_aaSxFWlNpSWyC2BL3roIttdt0Uby?usp=sharing).
 2. Lưu/Copy file vừa tải vào thư mục `backend/dist/` (tạo thư mục `dist` trong thư mục `backend` nếu chưa có).
 3. Chạy file `start.bat` ở thư mục gốc để bắt đầu học tập ngay lập tức!
 
