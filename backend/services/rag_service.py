@@ -67,7 +67,7 @@ class RAGService:
                 # Try preferred model first, then fallback
                 for model in ["gemma3:4b", "llama3.2:3b", "mistral", "phi3"]:
                     try:
-                        llm = OllamaLLM(model=model, temperature=0.3)
+                        llm = OllamaLLM(model=model, temperature=0.3, num_ctx=8192)
                         llm.invoke("hi")  # Test call
                         self._llm = llm
                         self.model_name = model

@@ -1,56 +1,34 @@
 """
 StudyBlossom 🌸 — OCR Service
 CPU-only stack:
-  - pdfplumber  → extract digital PDF text (instant)
-  - PaddleOCR   → general handwritten/printed text from images
-  - easyocr     → fallback for difficult handwriting
+  - pymupdf (fitz) → extract digital PDF text (instant, no mypyc issues)
+  - easyocr         → general handwritten/printed text from images
+  - PaddleOCR 3.x   → fallback only, using correct 3.x pipeline API
 """
 
 from __future__ import annotations
 import re
+import warnings
 from pathlib import Path
+
+# Suppress the noisy torch pin_memory warning (no GPU, expected behaviour)
+warnings.filterwarnings(
+    "ignore",
+    message=".*pin_memory.*no accelerator.*",
+    category=UserWarning,
+)
 
 
 class OCRService:
-    _paddle = None
     _easy   = None
+    _paddle = None
 
-    def _get_paddle(self):
-        """Lazy-load PaddleOCR (slow first import, fast after)."""
-        if self._paddle is None:
-            try:
-                from paddleocr import PaddleOCR
-                
-                # Define signatures to try in order of preference (newer 3.x to older 2.x)
-                signatures = [
-                    # 1. 3.x modern: CPU device, disable logging
-                    {"use_angle_cls": True, "lang": "en", "device": "cpu", "show_log": False},
-                    # 2. 3.x modern without show_log:
-                    {"use_angle_cls": True, "lang": "en", "device": "cpu"},
-                    # 3. 2.x old: use_gpu=False, show_log
-                    {"use_angle_cls": True, "lang": "en", "use_gpu": False, "show_log": False},
-                    # 4. 2.x old without show_log:
-                    {"use_angle_cls": True, "lang": "en", "use_gpu": False},
-                    # 5. Basic fallback:
-                    {"use_angle_cls": True, "lang": "en"}
-                ]
-
-                for kwargs in signatures:
-                    try:
-                        self._paddle = PaddleOCR(**kwargs)
-                        break
-                    except (TypeError, ValueError):
-                        continue
-                
-                if self._paddle is None:
-                    raise ImportError("Failed to initialize PaddleOCR with any known signature.")
-
-            except ImportError:
-                print("⚠️  PaddleOCR not installed. Run: pip install paddleocr")
-        return self._paddle
+    # ------------------------------------------------------------------
+    # Lazy loaders
+    # ------------------------------------------------------------------
 
     def _get_easy(self):
-        """Lazy-load EasyOCR as fallback."""
+        """Lazy-load EasyOCR (primary OCR engine)."""
         if self._easy is None:
             try:
                 import easyocr
@@ -59,72 +37,73 @@ class OCRService:
                 print("⚠️  EasyOCR not installed. Run: pip install easyocr")
         return self._easy
 
+    def _get_paddle(self):
+        """
+        Lazy-load PaddleOCR 3.x (fallback engine).
+        PaddleOCR 3.x uses a pipeline-based API — no use_gpu/show_log kwargs.
+        """
+        if self._paddle is None:
+            try:
+                from paddleocr import PaddleOCR
+                # 3.x: only lang is a safe universal kwarg
+                self._paddle = PaddleOCR(lang="en")
+            except Exception as e:
+                print(f"⚠️  PaddleOCR init failed (will use EasyOCR only): {e}")
+        return self._paddle
+
+    # ------------------------------------------------------------------
+    # PDF extraction (pymupdf — no mypyc, bundles cleanly in PyInstaller)
+    # ------------------------------------------------------------------
+
     def extract_pdf(self, path: str) -> str:
         """
         Extract text from a PDF file.
-        Tries pdfplumber first (for digital/embedded PDFs).
-        If no text extracted, falls back to PaddleOCR on rendered pages.
+        Uses pymupdf (fitz) for both digital text and image-based pages.
+        Falls back to OCR on pages that yield no text.
         """
         text_parts = []
 
         try:
-            import pdfplumber
-            with pdfplumber.open(path) as pdf:
-                for page in pdf.pages:
-                    t = page.extract_text()
-                    if t:
-                        text_parts.append(t.strip())
-
-            if text_parts:
-                return "\n\n".join(text_parts)
-
-        except Exception as e:
-            print(f"pdfplumber error: {e}")
-
-        # Fallback: render pages as images and OCR
-        try:
             import fitz  # pymupdf
             doc = fitz.open(path)
+
             for page_num in range(len(doc)):
                 page = doc.load_page(page_num)
-                mat  = fitz.Matrix(2, 2)   # 2x zoom for better OCR
-                pix  = page.get_pixmap(matrix=mat)
+
+                # Try embedded text first (fast, perfect quality)
+                t = page.get_text("text").strip()
+                if t:
+                    text_parts.append(t)
+                    continue
+
+                # Page has no embedded text → render and OCR
+                mat     = fitz.Matrix(2, 2)  # 2× zoom for better OCR accuracy
+                pix     = page.get_pixmap(matrix=mat)
                 img_path = f"{path}_page_{page_num}.png"
                 pix.save(img_path)
                 try:
-                    text_parts.append(self.extract_image(img_path))
+                    ocr_text = self.extract_image(img_path)
+                    if ocr_text and ocr_text != "[OCR failed — check that EasyOCR is installed]":
+                        text_parts.append(ocr_text)
                 finally:
                     Path(img_path).unlink(missing_ok=True)
 
         except Exception as e:
-            print(f"PDF→image fallback error: {e}")
+            print(f"PDF extraction error: {e}")
 
         return "\n\n".join(filter(None, text_parts)) or "[Could not extract text]"
 
+    # ------------------------------------------------------------------
+    # Image OCR
+    # ------------------------------------------------------------------
+
     def extract_image(self, path: str) -> str:
         """
-        Extract text from an image using PaddleOCR.
-        Falls back to EasyOCR if PaddleOCR fails.
+        Extract text from an image.
+        Primary: EasyOCR (bundles well, CPU-friendly).
+        Fallback: PaddleOCR 3.x.
         """
-        # Try PaddleOCR first
-        try:
-            paddle = self._get_paddle()
-            if paddle:
-                result = paddle.ocr(path, cls=True)
-                if result and result[0]:
-                    lines = [
-                        line[1][0] for block in result
-                        if block for line in block
-                        if line and len(line) > 1 and line[1]
-                    ]
-                    text = "\n".join(lines)
-                    if text.strip():
-                        return self._post_process(text)
-
-        except Exception as e:
-            print(f"PaddleOCR error: {e}")
-
-        # Fallback: EasyOCR
+        # --- EasyOCR (primary) ---
         try:
             easy = self._get_easy()
             if easy:
@@ -132,17 +111,46 @@ class OCRService:
                 text = "\n".join([r[1] for r in result])
                 if text.strip():
                     return self._post_process(text)
-
         except Exception as e:
             print(f"EasyOCR error: {e}")
 
-        return "[OCR failed — check that PaddleOCR or EasyOCR is installed]"
+        # --- PaddleOCR 3.x (fallback) ---
+        try:
+            paddle = self._get_paddle()
+            if paddle:
+                result = paddle.ocr(path)
+                if result and result[0]:
+                    lines = [
+                        item["text"]
+                        for block in result
+                        if block
+                        for item in (block if isinstance(block, list) else [])
+                        if isinstance(item, dict) and "text" in item
+                    ]
+                    if not lines:
+                        # Older 3.x returns [[box, (text, score)], ...]
+                        lines = [
+                            line[1][0]
+                            for block in result
+                            if block
+                            for line in block
+                            if line and len(line) > 1 and line[1]
+                        ]
+                    text = "\n".join(lines)
+                    if text.strip():
+                        return self._post_process(text)
+        except Exception as e:
+            print(f"PaddleOCR error: {e}")
+
+        return "[OCR failed — check that EasyOCR is installed]"
+
+    # ------------------------------------------------------------------
+    # Post-processing
+    # ------------------------------------------------------------------
 
     def _post_process(self, text: str) -> str:
         """Clean up common OCR artifacts."""
-        # Remove excessive whitespace
         text = re.sub(r' {3,}', '  ', text)
-        # Fix common Vietnamese character issues
         text = text.strip()
         return text
 
