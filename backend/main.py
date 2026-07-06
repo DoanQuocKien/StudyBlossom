@@ -63,12 +63,14 @@ app.include_router(quiz.router, prefix="/api/quiz", tags=["Quiz"])
 
 @app.get("/api/health")
 async def health():
-    """Health check — also returns info about the loaded Ollama model."""
+    """Health check — lightweight, does NOT block on Ollama connection."""
     from services.rag_service import rag_service
+    # Report whichever model was already loaded; don't trigger a new Ollama connection
+    model = rag_service.model_name if rag_service._llm else "not loaded"
     return {
         "status": "ok",
-        "model":  rag_service.model_name if hasattr(rag_service, "model_name") else "ollama",
-        "app":    "StudyBlossom 🌸",
+        "model":  model,
+        "app":    "StudyBlossom",
     }
 
 

@@ -6,11 +6,21 @@ Pipeline:
 
 from __future__ import annotations
 import uuid
+import sys
 from pathlib import Path
 from typing import List
 
 
-DATA_DIR = Path(__file__).parent.parent.parent / "data"
+# When frozen by PyInstaller, __file__ is inside the temp _MEI* extraction dir
+# which is wiped on exit. Use the actual .exe location instead so data persists.
+if getattr(sys, 'frozen', False):
+    # Running as compiled .exe — use the directory containing the exe
+    _BASE_DIR = Path(sys.executable).parent
+else:
+    # Running as plain Python script
+    _BASE_DIR = Path(__file__).parent.parent.parent
+
+DATA_DIR  = _BASE_DIR / "data"
 CHROMA_DIR = DATA_DIR / "chromadb"
 CHROMA_DIR.mkdir(parents=True, exist_ok=True)
 
