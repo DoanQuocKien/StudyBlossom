@@ -43,10 +43,10 @@ const SubjectsPage = {
       <div class="mb-4">
         <div class="flex items-center justify-between mb-1">
           <span class="text-xs text-muted">${I18N.t('subj_progress')}</span>
-          <span class="text-xs" style="color:${s.color}">${s.progress || 0}%</span>
+          <span data-subject-progress-text="${s.id}" class="text-xs" style="color:${s.color}">${s.progress || 0}%</span>
         </div>
         <div class="progress-bar-wrap">
-          <div class="progress-bar-fill" style="width:${s.progress || 0}%;background:linear-gradient(90deg,${s.color},${s.color}88)"></div>
+          <div data-subject-progress="${s.id}" class="progress-bar-fill" style="width:${s.progress || 0}%;background:linear-gradient(90deg,${s.color},${s.color}88)"></div>
         </div>
       </div>
 
@@ -210,9 +210,12 @@ const SubjectsPage = {
     const doneCount = subject.topics.filter(t => t.done).length;
     subject.progress = subject.topics.length > 0 ? Math.round((doneCount / subject.topics.length) * 100) : 0;
     Storage.upsertSubject(subject);
-    // Update progress bar inline without full re-render
+    
+    // Update progress bar & text inline without full re-render
     const fill = document.querySelector(`[data-subject-progress="${subjectId}"]`);
     if (fill) fill.style.width = subject.progress + '%';
+    const txt = document.querySelector(`[data-subject-progress-text="${subjectId}"]`);
+    if (txt) txt.textContent = subject.progress + '%';
   },
 
   deleteTopic(subjectId, idx) {
@@ -228,5 +231,11 @@ const SubjectsPage = {
     if (!subject) return;
     subject.progress = parseInt(value);
     Storage.upsertSubject(subject);
+
+    // Update progress bar & text inline without full re-render
+    const fill = document.querySelector(`[data-subject-progress="${subjectId}"]`);
+    if (fill) fill.style.width = subject.progress + '%';
+    const txt = document.querySelector(`[data-subject-progress-text="${subjectId}"]`);
+    if (txt) txt.textContent = subject.progress + '%';
   },
 };
