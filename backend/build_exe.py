@@ -47,6 +47,7 @@ def build():
         "--collect-all=pdfplumber",
         "--collect-all=rfc3987_syntax",
         "--collect-all=lark",
+        "--collect-all=charset_normalizer",
         "main.py",
     ]
 

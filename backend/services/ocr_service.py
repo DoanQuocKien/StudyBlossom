@@ -20,24 +20,31 @@ class OCRService:
         if self._paddle is None:
             try:
                 from paddleocr import PaddleOCR
-                # PaddleOCR 3.x removed `use_gpu` — try new API first,
-                # then fall back to the 2.x signature for older installs.
-                try:
-                    # 3.x style: no use_gpu, device param for explicit CPU
-                    self._paddle = PaddleOCR(
-                        use_angle_cls=True,
-                        lang="en",
-                        device="cpu",
-                        show_log=False,
-                    )
-                except TypeError:
-                    # 2.x style: use_gpu=False
-                    self._paddle = PaddleOCR(
-                        use_angle_cls=True,
-                        lang="en",
-                        use_gpu=False,
-                        show_log=False,
-                    )
+                
+                # Define signatures to try in order of preference (newer 3.x to older 2.x)
+                signatures = [
+                    # 1. 3.x modern: CPU device, disable logging
+                    {"use_angle_cls": True, "lang": "en", "device": "cpu", "show_log": False},
+                    # 2. 3.x modern without show_log:
+                    {"use_angle_cls": True, "lang": "en", "device": "cpu"},
+                    # 3. 2.x old: use_gpu=False, show_log
+                    {"use_angle_cls": True, "lang": "en", "use_gpu": False, "show_log": False},
+                    # 4. 2.x old without show_log:
+                    {"use_angle_cls": True, "lang": "en", "use_gpu": False},
+                    # 5. Basic fallback:
+                    {"use_angle_cls": True, "lang": "en"}
+                ]
+
+                for kwargs in signatures:
+                    try:
+                        self._paddle = PaddleOCR(**kwargs)
+                        break
+                    except TypeError:
+                        continue
+                
+                if self._paddle is None:
+                    raise ImportError("Failed to initialize PaddleOCR with any known signature.")
+
             except ImportError:
                 print("⚠️  PaddleOCR not installed. Run: pip install paddleocr")
         return self._paddle
