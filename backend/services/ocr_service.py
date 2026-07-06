@@ -39,7 +39,7 @@ class OCRService:
                     try:
                         self._paddle = PaddleOCR(**kwargs)
                         break
-                    except TypeError:
+                    except (TypeError, ValueError):
                         continue
                 
                 if self._paddle is None:
