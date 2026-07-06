@@ -123,9 +123,13 @@ const NotesPage = {
 
   _renderEmptyHint() {
     const lang = I18N.lang;
-    return `<div style="text-align:center;color:var(--text-muted);padding:3rem 1rem;font-size:0.9rem;border:2px dashed var(--border);border-radius:var(--r-lg);margin:0.5rem 0">
+    return `<div onclick="NotesPage.insertBlock(-1, 'text')" class="card-clickable animate-pulse" 
+      style="text-align:center;color:var(--text-muted);padding:3rem 1rem;font-size:0.9rem;border:2px dashed var(--border);border-radius:var(--r-lg);margin:0.5rem 0;cursor:pointer">
       <div style="font-size:2rem;margin-bottom:0.5rem">📝</div>
-      ${lang==='vi'?'Nhấn <b>+</b> bên trên để thêm khối đầu tiên':'Click <b>+</b> above to add your first block'}
+      <p style="font-weight:600;color:var(--text-secondary);margin-bottom:0.25rem">
+        ${lang==='vi'?'Nhấp để viết nội dung...':'Click to start writing...'}
+      </p>
+      <span style="font-size:0.75rem">${lang==='vi'?'Nhấp để tự động tạo một khối văn bản mới.':'Clicking will automatically insert a new text block.'}</span>
     </div>`;
   },
 
@@ -642,6 +646,20 @@ const NotesPage = {
     this._blocks.splice(afterIdx + 1, 0, block);
     this._triggerAutosave();
     this._rerenderBlocks();
+
+    // Auto-focus the newly created block element so the user can start typing immediately
+    setTimeout(() => {
+      if (type === 'text') {
+        const el = document.getElementById(`text-block-${block.id}`);
+        if (el) el.focus();
+      } else if (type === 'code') {
+        const el = document.getElementById(`code-block-${block.id}`);
+        if (el) el.focus();
+      } else if (type === 'math') {
+        const el = document.getElementById(`math-input-${block.id}`);
+        if (el) el.focus();
+      }
+    }, 50);
   },
 
   deleteBlock(blockId) {

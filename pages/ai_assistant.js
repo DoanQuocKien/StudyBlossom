@@ -70,20 +70,34 @@ const AIPage = {
             </div>
 
             <!-- Doc list -->
-            ${docs.length === 0
+            ${(docs.length === 0 && !this._uploadingFile)
               ? `<div class="empty-state" style="padding:1.5rem 0">
                   <div style="font-size:2rem;margin-bottom:0.5rem">📚</div>
                   <p class="text-sm text-muted">${I18N.t('ai_no_docs')}</p>
                  </div>`
-              : docs.map(d => `
-                <div class="doc-item">
-                  <span style="font-size:1.1rem">${d.type==='pdf'?'📄':d.type==='image'?'🖼️':'📝'}</span>
-                  <div style="flex:1;overflow:hidden">
-                    <div class="doc-item-name truncate">${d.name}</div>
-                    <div class="doc-item-meta">${App.formatDate(d.uploadedAt)}</div>
+              : `
+                ${docs.map(d => `
+                  <div class="doc-item">
+                    <span style="font-size:1.1rem">${d.type==='pdf'?'📄':d.type==='image'?'🖼️':'📝'}</span>
+                    <div style="flex:1;overflow:hidden">
+                      <div class="doc-item-name truncate">${d.name}</div>
+                      <div class="doc-item-meta">${App.formatDate(d.uploadedAt)}</div>
+                    </div>
+                    <button onclick="AIPage.removeDoc(${d.id})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem">✕</button>
                   </div>
-                  <button onclick="AIPage.removeDoc(${d.id})" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1rem">✕</button>
-                </div>`).join('')}
+                `).join('')}
+                ${this._uploadingFile ? `
+                  <div class="doc-item processing animate-pulse" style="opacity:0.65;filter:blur(0.4px);border:1px dashed var(--purple);background:rgba(124,58,237,0.05);gap:0.5rem">
+                    <span style="font-size:1.1rem">⏳</span>
+                    <div style="flex:1;overflow:hidden">
+                      <div class="doc-item-name truncate">${this._uploadingFile.name}</div>
+                      <div class="doc-item-meta" style="color:var(--purple);font-weight:500">${lang==='vi'?'Đang phân tích RAG...':'Processing RAG...'}</div>
+                    </div>
+                    <span class="spinner" style="font-size:0.85rem"></span>
+                  </div>
+                ` : ''}
+              `
+            }
           </div>
 
           <!-- Backend status -->
@@ -132,16 +146,11 @@ const AIPage = {
     this._checkBackendStatus();
     this._scrollToBottom();
     if (window.lucide) lucide.createIcons();
-
-    // Check backend status periodically every 5 seconds
-    this._statusInterval = setInterval(() => this._checkBackendStatus(), 5000);
+    this._statusInterval = null;
   },
 
   destroy() {
-    if (this._statusInterval) {
-      clearInterval(this._statusInterval);
-      this._statusInterval = null;
-    }
+    this._statusInterval = null;
   },
 
   async _checkBackendStatus() {
@@ -255,6 +264,13 @@ const AIPage = {
     const formData = new FormData();
     formData.append('file', file);
 
+    // Set uploading state and re-render to show blurred placeholder slot
+    this._uploadingFile = {
+      name: file.name,
+      type: file.name.endsWith('.pdf') ? 'pdf' : file.type.startsWith('image/') ? 'image' : 'text'
+    };
+    App.navigate('ai', false);
+
     App.toast(I18N.lang==='vi'?`Đang tải lên ${file.name}...`:`Uploading ${file.name}...`, 'info', 2000);
 
     try {
@@ -262,13 +278,14 @@ const AIPage = {
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
 
-      const type = file.name.endsWith('.pdf') ? 'pdf' : file.type.startsWith('image/') ? 'image' : 'text';
-      Storage.addRagDocument({ name: file.name, type, chunks: data.chunks });
+      Storage.addRagDocument({ name: file.name, type: this._uploadingFile.type, chunks: data.chunks });
 
       App.toast(I18N.lang==='vi'?`✅ Đã xử lý "${file.name}" — ${data.chunks||'?'} đoạn văn bản`:`✅ Processed "${file.name}" — ${data.chunks||'?'} chunks`, 'success', 4000);
-      App.navigate('ai', false);
     } catch(e) {
       App.toast(I18N.t('ai_backend_off'), 'error', 5000);
+    } finally {
+      this._uploadingFile = null;
+      App.navigate('ai', false);
     }
   },
 

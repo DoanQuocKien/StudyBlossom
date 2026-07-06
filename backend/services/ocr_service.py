@@ -20,12 +20,24 @@ class OCRService:
         if self._paddle is None:
             try:
                 from paddleocr import PaddleOCR
-                self._paddle = PaddleOCR(
-                    use_angle_cls=True,
-                    lang="en",          # 'en' supports both English and Vietnamese
-                    use_gpu=False,
-                    show_log=False,
-                )
+                # PaddleOCR 3.x removed `use_gpu` — try new API first,
+                # then fall back to the 2.x signature for older installs.
+                try:
+                    # 3.x style: no use_gpu, device param for explicit CPU
+                    self._paddle = PaddleOCR(
+                        use_angle_cls=True,
+                        lang="en",
+                        device="cpu",
+                        show_log=False,
+                    )
+                except TypeError:
+                    # 2.x style: use_gpu=False
+                    self._paddle = PaddleOCR(
+                        use_angle_cls=True,
+                        lang="en",
+                        use_gpu=False,
+                        show_log=False,
+                    )
             except ImportError:
                 print("⚠️  PaddleOCR not installed. Run: pip install paddleocr")
         return self._paddle
